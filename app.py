@@ -258,16 +258,32 @@ with c3:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs(["📊 Visão Geral e Extrato", "⚡ Lançar Contas", "⚙️ Configurar Aluguel"])
+tab1, tab2, tab3 = st.tabs(["📊 Visão Geral e Extrato", "⚡ Lançar e Editar Contas", "⚙️ Configurar Aluguel"])
 
 with tab1:
+    st.caption("💡 Dica: você pode clicar duas vezes em qualquer linha das tabelas abaixo para editar Pessoa, Descrição ou Valor diretamente na lista.")
     col_t1, col_t2 = st.columns(2)
     with col_t1:
         st.markdown("### **Rendas do Mês**")
         if rendas:
             df_r = pd.DataFrame(rendas)
-            df_r.columns = ["Pessoa", "Descrição", "Valor (R$)"]
-            st.dataframe(df_r, use_container_width=True, hide_index=True)
+            df_r = df_r.rename(columns={"pessoa": "Pessoa", "desc": "Descrição", "valor": "Valor"})
+            edited_r = st.data_editor(
+                df_r,
+                key=f"edit_r_{mes_atual}",
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Pessoa": st.column_config.SelectboxColumn("Pessoa", options=["Thiago", "Luciana"], required=True),
+                    "Descrição": st.column_config.TextColumn("Descrição", required=True),
+                    "Valor": st.column_config.NumberColumn("Valor (R$)", format="R$ %.2f", required=True)
+                }
+            )
+            lista_editada_r = edited_r.rename(columns={"Pessoa": "pessoa", "Descrição": "desc", "Valor": "valor"}).to_dict(orient="records")
+            if lista_editada_r != rendas:
+                db[mes_atual]["rendas"] = lista_editada_r
+                salvar_dados(db)
+                st.rerun()
         else:
             st.info("Nenhuma renda registrada.")
             
@@ -275,8 +291,23 @@ with tab1:
         st.markdown("### **Despesas Pagas**")
         if despesas:
             df_d = pd.DataFrame(despesas)
-            df_d.columns = ["Pessoa", "Descrição", "Valor (R$)"]
-            st.dataframe(df_d, use_container_width=True, hide_index=True)
+            df_d = df_d.rename(columns={"pessoa": "Pessoa", "desc": "Descrição", "valor": "Valor"})
+            edited_d = st.data_editor(
+                df_d,
+                key=f"edit_d_{mes_atual}",
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Pessoa": st.column_config.SelectboxColumn("Pessoa", options=["Thiago", "Luciana"], required=True),
+                    "Descrição": st.column_config.TextColumn("Descrição", required=True),
+                    "Valor": st.column_config.NumberColumn("Valor (R$)", format="R$ %.2f", required=True)
+                }
+            )
+            lista_editada_d = edited_d.rename(columns={"Pessoa": "pessoa", "Descrição": "desc", "Valor": "valor"}).to_dict(orient="records")
+            if lista_editada_d != despesas:
+                db[mes_atual]["despesas"] = lista_editada_d
+                salvar_dados(db)
+                st.rerun()
         else:
             st.info("Nenhuma despesa registrada.")
 
@@ -288,7 +319,7 @@ with tab2:
         f_desc = st.text_input("Descrição (ex: Cartão, Escola, Supermercado, Salário)")
         f_valor = st.number_input("Valor (R$)", min_value=0.0, step=10.0, format="%.2f")
         
-        submitted = st.form_submit_button("Salvar")
+        submitted = st.form_submit_button("Salvar Novo Lançamento")
         if submitted:
             if f_desc and f_valor > 0:
                 chave = "rendas" if f_tipo == "Renda" else "despesas"
@@ -300,27 +331,70 @@ with tab2:
                 st.error("Preencha a descrição e um valor válido.")
 
     st.markdown("---")
-    st.markdown("### **Excluir Lançamentos**")
-    col_rem1, col_rem2 = st.columns(2)
-    with col_rem1:
+    st.markdown("### **Editar ou Excluir Lançamentos Específicos**")
+    
+    col_edit1, col_edit2 = st.columns(2)
+    with col_edit1:
+        st.markdown("#### ✏️ **Editar Renda**")
         if rendas:
             r_opts = {f"{r['pessoa']} - {r['desc']} (R$ {r['valor']:,.2f})": i for i, r in enumerate(rendas)}
-            r_sel = st.selectbox("Selecione a Renda", options=list(r_opts.keys()))
-            if st.button("Excluir Renda"):
-                db[mes_atual]["rendas"].pop(r_opts[r_sel])
-                salvar_dados(db)
-                st.rerun()
+            r_sel_key = st.selectbox("Selecione a Renda", options=list(r_opts.keys()), key="sel_edit_renda")
+            idx_r = r_opts[r_sel_key]
+            item_r = rendas[idx_r]
+            
+            with st.form(f"form_edit_renda_{idx_r}"):
+                edit_r_pessoa = st.selectbox("Pessoa", ["Thiago", "Luciana"], index=0 if item_r["pessoa"] == "Thiago" else 1)
+                edit_r_desc = st.text_input("Descrição", value=item_r["desc"])
+                edit_r_valor = st.number_input("Valor (R$)", min_value=0.0, value=float(item_r["valor"]), step=10.0, format="%.2f")
+                
+                c_btn1, c_btn2 = st.columns(2)
+                with c_btn1:
+                    salvar_edicao_r = st.form_submit_button("Atualizar Renda")
+                with c_btn2:
+                    excluir_r = st.form_submit_button("Excluir Renda")
+                    
+                if salvar_edicao_r:
+                    db[mes_atual]["rendas"][idx_r] = {"pessoa": edit_r_pessoa, "desc": edit_r_desc, "valor": edit_r_valor}
+                    salvar_dados(db)
+                    st.success("Renda atualizada com sucesso!")
+                    st.rerun()
+                if excluir_r:
+                    db[mes_atual]["rendas"].pop(idx_r)
+                    salvar_dados(db)
+                    st.success("Renda excluída!")
+                    st.rerun()
         else:
             st.caption("Sem rendas cadastradas.")
 
-    with col_rem2:
+    with col_edit2:
+        st.markdown("#### ✏️ **Editar Despesa**")
         if despesas:
             d_opts = {f"{d['pessoa']} - {d['desc']} (R$ {d['valor']:,.2f})": i for i, d in enumerate(despesas)}
-            d_sel = st.selectbox("Selecione a Despesa", options=list(d_opts.keys()))
-            if st.button("Excluir Despesa"):
-                db[mes_atual]["despesas"].pop(d_opts[d_sel])
-                salvar_dados(db)
-                st.rerun()
+            d_sel_key = st.selectbox("Selecione a Despesa", options=list(d_opts.keys()), key="sel_edit_desp")
+            idx_d = d_opts[d_sel_key]
+            item_d = despesas[idx_d]
+            
+            with st.form(f"form_edit_desp_{idx_d}"):
+                edit_d_pessoa = st.selectbox("Responsável", ["Thiago", "Luciana"], index=0 if item_d["pessoa"] == "Thiago" else 1)
+                edit_d_desc = st.text_input("Descrição", value=item_d["desc"])
+                edit_d_valor = st.number_input("Valor (R$)", min_value=0.0, value=float(item_d["valor"]), step=10.0, format="%.2f")
+                
+                c_btn3, c_btn4 = st.columns(2)
+                with c_btn3:
+                    salvar_edicao_d = st.form_submit_button("Atualizar Despesa")
+                with c_btn4:
+                    excluir_d = st.form_submit_button("Excluir Despesa")
+                    
+                if salvar_edicao_d:
+                    db[mes_atual]["despesas"][idx_d] = {"pessoa": edit_d_pessoa, "desc": edit_d_desc, "valor": edit_d_valor}
+                    salvar_dados(db)
+                    st.success("Despesa atualizada com sucesso!")
+                    st.rerun()
+                if excluir_d:
+                    db[mes_atual]["despesas"].pop(idx_d)
+                    salvar_dados(db)
+                    st.success("Despesa excluída!")
+                    st.rerun()
         else:
             st.caption("Sem despesas cadastradas.")
 
