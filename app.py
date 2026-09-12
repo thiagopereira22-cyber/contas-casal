@@ -161,7 +161,7 @@ with aba_lancamentos:
             salvar_dados(db)
             st.rerun()
             
-    elif tipo_mov == "Despesa" && db[mes_selecionado]["despesas"]:
+    elif tipo_mov == "Despesa" and db[mes_selecionado]["despesas"]:
         pass # handled in block below cleanly
     
     if db[mes_selecionado]["despesas"]:
