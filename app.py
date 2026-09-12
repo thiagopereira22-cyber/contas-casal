@@ -380,7 +380,7 @@ with col_left:
         st.markdown(f"""
             <div class="card-dark">
                 <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: #64748b;">Cota Proporcional das Contas</span>
-                <h3 style="font-size: 1.3rem; font-weight: 800; margin: 8px 0; color: #10b981;">Thiago {perc_thiago*100:.1f}% | Lu {perc_luciana*100:.1f}%</h3>
+                <h3 style="font-size: 1.3rem; font-weight: 800; margin: 8px 0; color: #10b981;">Thiago {perc_thiago*100:.1f}% | Luciana {perc_luciana*100:.1f}%</h3>
                 <svg width="100%" height="24" viewBox="0 0 200 24" fill="none">
                     <path d="M0 14 Q 50 20, 100 8 T 160 16 T 200 6" stroke="#10b981" stroke-width="2.5" fill="none"/>
                 </svg>
