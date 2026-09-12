@@ -20,26 +20,24 @@ st.markdown("""
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-        /* Fundo geral Midnight Blue */
         .stApp {
             background-color: #070913 !important;
             color: #f1f5f9;
         }
 
-        /* Barra lateral em cápsula escura */
         [data-testid="stSidebar"] {
             background-color: #0c0f1d !important;
             border-right: 1px solid #1a2238;
         }
 
-        /* Botões de mês em estilo pílula vertical */
+        /* Botões de mês: estilo pílula vertical */
         div[data-testid="stRadio"] > div {
             gap: 6px;
         }
         div[data-testid="stRadio"] label {
             background: #11162b !important;
             border: 1px solid #1c2442 !important;
-            padding: 8px 14px !important;
+            padding: 9px 14px !important;
             border-radius: 12px !important;
             cursor: pointer;
             transition: all 0.25s ease;
@@ -48,18 +46,23 @@ st.markdown("""
             font-weight: 600 !important;
         }
         div[data-testid="stRadio"] label:hover {
-            border-color: #ec4899 !important;
+            border-color: #ff007a !important;
             color: #ffffff !important;
             transform: translateX(3px);
         }
+        /* Mês selecionado com a cor rosa idêntica ao cartão Renda Total Consolidada */
         div[data-testid="stRadio"] label[data-checked="true"] {
-            background: linear-gradient(135deg, #ff007a 0%, #d946ef 100%) !important;
-            border-color: #ff007a !important;
+            background: linear-gradient(135deg, #ff007a 0%, #ec4899 50%, #d946ef 100%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
             color: #ffffff !important;
-            box-shadow: 0 4px 15px rgba(255, 0, 122, 0.35);
+            font-weight: 700 !important;
+            box-shadow: 0 4px 18px rgba(255, 0, 122, 0.45) !important;
+        }
+        div[data-testid="stRadio"] label[data-checked="true"] p {
+            color: #ffffff !important;
+            font-weight: 700 !important;
         }
 
-        /* Top Bar Widgets */
         .top-bar {
             display: flex;
             justify-content: space-between;
@@ -114,7 +117,6 @@ st.markdown("""
             overflow: hidden;
         }
 
-        /* Cards Dark Midnight */
         .card-dark {
             background: #11162b;
             border: 1px solid #1c2442;
@@ -127,7 +129,6 @@ st.markdown("""
             border-color: #2e3b68;
         }
 
-        /* Donut Widget Neon */
         .donut-card {
             background: linear-gradient(145deg, #ff007a 0%, #c026d3 100%);
             border-radius: 28px;
@@ -166,7 +167,6 @@ st.markdown("""
             font-size: 1.6rem;
         }
 
-        /* Abas estilizadas */
         .stTabs [data-baseweb="tab-list"] {
             gap: 8px;
             background: #0c0f1d;
@@ -188,7 +188,6 @@ st.markdown("""
             box-shadow: 0 4px 15px rgba(255, 0, 122, 0.4);
         }
 
-        /* Botão padrão Streamlit */
         .stButton>button {
             background: linear-gradient(135deg, #ff007a 0%, #d946ef 100%) !important;
             color: white !important;
@@ -220,6 +219,14 @@ RENDAS_PADRAO = [
     {"pessoa": "Luciana", "desc": "Diárias", "valor": 4781.50}
 ]
 
+# Catálogo padrão inicial de despesas para seleção rápida
+DESPESAS_CATALOGO_PADRAO = [
+    "Aluguel Duetto", "Cond. Duetto", "Energia Duetto", "IPTU Duetto",
+    "Cond. Aldepark", "Energia Aldepark", "Cartão C6", "Escola Felipe",
+    "Escola Vinícius", "Dentista vinicius", "Hapvida", "Parque das Flores",
+    "Parque das Flores IPTU", "Ultragás", "Gasolina", "Supermercado", "Jô"
+]
+
 def carregar_dados():
     if os.path.exists(DB_FILE):
         with open(DB_FILE, "r", encoding="utf-8") as f:
@@ -227,21 +234,27 @@ def carregar_dados():
     else:
         dados = {}
 
+    if "catalogo_despesas" not in dados:
+        dados["catalogo_despesas"] = sorted(DESPESAS_CATALOGO_PADRAO)
+
     for m in MESES_PADRAO:
         if m not in dados:
             dados[m] = {
                 "rendas": [r.copy() for r in RENDAS_PADRAO],
                 "despesas": [],
-                "aluguel_extra": 3300.00,
-                "aluguel_recebedor": "Thiago"
+                "renda_extra_nome": "Aluguel Aldepark",
+                "renda_extra_valor": 3300.00,
+                "renda_extra_recebedor": "Thiago"
             }
         else:
             if not dados[m].get("rendas"):
                 dados[m]["rendas"] = [r.copy() for r in RENDAS_PADRAO]
-            if "aluguel_extra" not in dados[m]:
-                dados[m]["aluguel_extra"] = 3300.00
-            if "aluguel_recebedor" not in dados[m]:
-                dados[m]["aluguel_recebedor"] = "Thiago"
+            if "renda_extra_valor" not in dados[m]:
+                antigo_val = dados[m].get("aluguel_extra", 3300.00)
+                antigo_rec = dados[m].get("aluguel_recebedor", "Thiago")
+                dados[m]["renda_extra_nome"] = "Aluguel Aldepark"
+                dados[m]["renda_extra_valor"] = antigo_val
+                dados[m]["renda_extra_recebedor"] = antigo_rec
                 
     return dados
 
@@ -251,7 +264,6 @@ def salvar_dados(dados):
 
 db = carregar_dados()
 
-# Mapeamento para ordenação cronológica correta
 mapa_meses = {
     "janeiro": 1, "fevereiro": 2, "março": 3, "marco": 3, "abril": 4,
     "maio": 5, "junho": 6, "julho": 7, "agosto": 8, "setembro": 9,
@@ -275,7 +287,8 @@ with st.sidebar:
         </div>
     """, unsafe_allow_html=True)
     
-    todos_meses = sorted(list(db.keys()), key=ordenar_meses)
+    chaves_meses = [k for k in db.keys() if k != "catalogo_despesas"]
+    todos_meses = sorted(chaves_meses, key=ordenar_meses)
     mes_atual = st.radio(
         label="Orçamento Mensal",
         options=todos_meses,
@@ -284,23 +297,26 @@ with st.sidebar:
     )
     
     st.markdown("---")
-    if st.button("🔄 Replicar Rendas/Aluguel"):
+    if st.button("🔄 Replicar Rendas/Extra"):
         rendas_atuais = db[mes_atual]["rendas"]
-        aluguel_atual = db[mes_atual].get("aluguel_extra", 3300.00)
-        recebedor_atual = db[mes_atual].get("aluguel_recebedor", "Thiago")
-        for m in db:
+        nome_extra = db[mes_atual].get("renda_extra_nome", "Aluguel Aldepark")
+        val_extra = db[mes_atual].get("renda_extra_valor", 3300.00)
+        rec_extra = db[mes_atual].get("renda_extra_recebedor", "Thiago")
+        for m in chaves_meses:
             db[m]["rendas"] = [r.copy() for r in rendas_atuais]
-            db[m]["aluguel_extra"] = aluguel_atual
-            db[m]["aluguel_recebedor"] = recebedor_atual
+            db[m]["renda_extra_nome"] = nome_extra
+            db[m]["renda_extra_valor"] = val_extra
+            db[m]["renda_extra_recebedor"] = rec_extra
         salvar_dados(db)
         st.success("Replicado para todos os meses!")
         st.rerun()
 
-# Cálculos Proporcionais e Aluguel
+# Cálculos Proporcionais e Renda Extra
 rendas = db[mes_atual]["rendas"]
 despesas = db[mes_atual]["despesas"]
-aluguel_extra = float(db[mes_atual].get("aluguel_extra", 3300.00))
-aluguel_recebedor = db[mes_atual].get("aluguel_recebedor", "Thiago")
+renda_extra_nome = db[mes_atual].get("renda_extra_nome", "Renda Extra")
+renda_extra_valor = float(db[mes_atual].get("renda_extra_valor", 3300.00))
+renda_extra_recebedor = db[mes_atual].get("renda_extra_recebedor", "Thiago")
 
 renda_thiago = sum(r["valor"] for r in rendas if r["pessoa"] == "Thiago")
 renda_luciana = sum(r["valor"] for r in rendas if r["pessoa"] == "Luciana")
@@ -316,16 +332,16 @@ bruto_thiago = sum(d["valor"] for d in despesas if d["pessoa"] == "Thiago")
 bruto_luciana = sum(d["valor"] for d in despesas if d["pessoa"] == "Luciana")
 despesas_brutas = bruto_thiago + bruto_luciana
 
-despesas_liquidas = max(0.0, despesas_brutas - aluguel_extra)
+despesas_liquidas = max(0.0, despesas_brutas - renda_extra_valor)
 deveria_thiago = despesas_liquidas * perc_thiago
 deveria_luciana = despesas_liquidas * perc_luciana
 
-if aluguel_recebedor == "Thiago":
-    efetivo_thiago = bruto_thiago - aluguel_extra
+if renda_extra_recebedor == "Thiago":
+    efetivo_thiago = bruto_thiago - renda_extra_valor
     efetivo_luciana = bruto_luciana
 else:
     efetivo_thiago = bruto_thiago
-    efetivo_luciana = bruto_luciana - aluguel_extra
+    efetivo_luciana = bruto_luciana - renda_extra_valor
 
 diff_thiago = efetivo_thiago - deveria_thiago
 
@@ -370,7 +386,7 @@ with col_left:
                 <svg width="100%" height="28" viewBox="0 0 200 28" fill="none">
                     <path d="M0 18 Q 30 5, 60 14 T 120 18 T 180 8 T 200 16" stroke="#ff007a" stroke-width="3" fill="none"/>
                 </svg>
-                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Bruto: R$ {despesas_brutas:,.2f} | Aluguel: -R$ {aluguel_extra:,.2f}</div>
+                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Bruto: R$ {despesas_brutas:,.2f} | Renda Extra: -R$ {renda_extra_valor:,.2f}</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -380,12 +396,12 @@ with col_left:
     with c3:
         st.markdown(f"""
             <div class="card-dark">
-                <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: #64748b;">Aluguel Aldepark (Abatido)</span>
-                <h3 style="font-size: 1.5rem; font-weight: 800; margin: 8px 0; color: #38bdf8;">- R$ {aluguel_extra:,.2f}</h3>
+                <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: #64748b;">{renda_extra_nome} (Abatido)</span>
+                <h3 style="font-size: 1.5rem; font-weight: 800; margin: 8px 0; color: #38bdf8;">- R$ {renda_extra_valor:,.2f}</h3>
                 <svg width="100%" height="24" viewBox="0 0 200 24" fill="none">
                     <path d="M0 16 Q 40 4, 80 12 T 140 18 T 200 8" stroke="#38bdf8" stroke-width="2.5" fill="none"/>
                 </svg>
-                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Recebido por {aluguel_recebedor} e descontado das contas.</div>
+                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Recebido por {renda_extra_recebedor} e descontado das contas.</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -393,7 +409,7 @@ with col_left:
         st.markdown(f"""
             <div class="card-dark">
                 <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: #64748b;">Cota Proporcional das Contas</span>
-                <h3 style="font-size: 1.3rem; font-weight: 800; margin: 8px 0; color: #10b981;">Thiago {perc_thiago*100:.1f}% | Lu {perc_luciana*100:.1f}%</h3>
+                <h3 style="font-size: 1.3rem; font-weight: 800; margin: 8px 0; color: #10b981;">Thiago {perc_thiago*100:.1f}% | Luciana {perc_luciana*100:.1f}%</h3>
                 <svg width="100%" height="24" viewBox="0 0 200 24" fill="none">
                     <path d="M0 14 Q 50 20, 100 8 T 160 16 T 200 6" stroke="#10b981" stroke-width="2.5" fill="none"/>
                 </svg>
@@ -428,8 +444,16 @@ with col_right:
 
 st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
 
+# Catálogo de Despesas Disponíveis
+catalogo_despesas = db.get("catalogo_despesas", sorted(DESPESAS_CATALOGO_PADRAO))
+
 # Abas de Ação e Edição
-tab1, tab2, tab3 = st.tabs(["📊 Extrato & Edição Direta", "⚡ Adicionar & Gerenciar Lançamentos", "⚙️ Configurar Aluguel"])
+tab1, tab2, tab3, tab4 = st.tabs([
+    "📊 Extrato & Edição Direta", 
+    "⚡ Lançamentos", 
+    "⚙️ Configurar Renda Extra",
+    "🏷️ Cadastrar Despesas"
+])
 
 with tab1:
     col_t1, col_t2 = st.columns(2)
@@ -467,7 +491,7 @@ with tab1:
                 hide_index=True,
                 column_config={
                     "Pessoa": st.column_config.SelectboxColumn("Pessoa", options=["Thiago", "Luciana"], required=True),
-                    "Descrição": st.column_config.TextColumn("Descrição", required=True),
+                    "Descrição": st.column_config.SelectboxColumn("Descrição", options=catalogo_despesas, required=True),
                     "Valor": st.column_config.NumberColumn("Valor (R$)", format="R$ %.2f", required=True)
                 }
             )
@@ -487,7 +511,11 @@ with tab2:
             f_tipo = st.selectbox("Tipo de Movimentação", ["Despesa", "Renda"])
             f_pessoa = st.selectbox("Responsável", ["Thiago", "Luciana"])
         with c_f2:
-            f_desc = st.text_input("Descrição (ex: Supermercado, Aluguel, Salário, Diárias)")
+            if f_tipo == "Despesa":
+                f_desc = st.selectbox("Escolha a Despesa Cadastrada", options=catalogo_despesas)
+            else:
+                f_desc = st.text_input("Descrição da Renda (ex: Salário, Diárias, Bônus)")
+                
             f_valor = st.number_input("Valor (R$)", min_value=0.0, step=10.0, format="%.2f")
             
         btn_salvar = st.form_submit_button("Salvar Lançamento")
@@ -536,7 +564,9 @@ with tab2:
             item_d = despesas[idx_d]
             with st.form(f"form_d_{idx_d}"):
                 ed_p = st.selectbox("Responsável", ["Thiago", "Luciana"], index=0 if item_d["pessoa"] == "Thiago" else 1)
-                ed_d = st.text_input("Descrição", value=item_d["desc"])
+                idx_cat = catalogo_despesas.index(item_d["desc"]) if item_d["desc"] in catalogo_despesas else 0
+                ed_d = st.selectbox("Descrição", options=catalogo_despesas, index=idx_cat)
+                
                 ed_v = st.number_input("Valor (R$)", min_value=0.0, value=float(item_d["valor"]), step=10.0, format="%.2f")
                 c_b3, c_b4 = st.columns(2)
                 with c_b3:
@@ -553,16 +583,53 @@ with tab2:
             st.caption("Sem despesas cadastradas.")
 
 with tab3:
-    st.markdown("<h4 style='color: #ffffff;'>🏠 Configuração do Aluguel Extra (Aldepark)</h4>", unsafe_allow_html=True)
-    st.write("Defina o valor do aluguel a ser abatido proporcionalmente das despesas totais:")
-    c_a1, c_a2 = st.columns(2)
+    st.markdown("<h4 style='color: #ffffff;'>⚙️ Configurar Renda Extra Compartilhada</h4>", unsafe_allow_html=True)
+    st.write("Defina o nome e o valor da renda extra (ex: Aluguel, Bônus, Rendimentos) a ser abatida proporcionalmente das despesas do casal:")
+    
+    c_a1, c_a2, c_a3 = st.columns(3)
     with c_a1:
-        novo_aluguel = st.number_input("Valor do Aluguel (R$)", min_value=0.0, value=aluguel_extra, step=50.0, format="%.2f")
+        novo_nome_extra = st.text_input("Identificação da Renda Extra", value=renda_extra_nome)
     with c_a2:
-        novo_recebedor = st.selectbox("Quem recebeu o dinheiro?", ["Thiago", "Luciana"], index=0 if aluguel_recebedor == "Thiago" else 1)
-    if st.button("Atualizar Aluguel"):
-        db[mes_atual]["aluguel_extra"] = novo_aluguel
-        db[mes_atual]["aluguel_recebedor"] = novo_recebedor
+        novo_valor_extra = st.number_input("Valor Total da Renda Extra (R$)", min_value=0.0, value=renda_extra_valor, step=50.0, format="%.2f")
+    with c_a3:
+        novo_recebedor_extra = st.selectbox("Quem recebeu o valor?", ["Thiago", "Luciana"], index=0 if renda_extra_recebedor == "Thiago" else 1)
+        
+    if st.button("Atualizar Renda Extra do Mês"):
+        db[mes_atual]["renda_extra_nome"] = novo_nome_extra
+        db[mes_atual]["renda_extra_valor"] = novo_valor_extra
+        db[mes_atual]["renda_extra_recebedor"] = novo_recebedor_extra
         salvar_dados(db)
-        st.success("Aluguel atualizado!")
+        st.success("Configuração de Renda Extra atualizada!")
         st.rerun()
+
+with tab4:
+    st.markdown("<h4 style='color: #ffffff;'>🏷️ Cadastrar e Gerenciar Despesas Padrão</h4>", unsafe_allow_html=True)
+    st.write("Adicione novos tipos de contas à sua lista para que fiquem disponíveis na seleção na hora do lançamento:")
+    
+    c_cat1, c_cat2 = st.columns([7, 3])
+    with c_cat1:
+        nova_desp_nome = st.text_input("Nome da Nova Despesa (ex: Academia, Combustível, Plano de Saúde)")
+    with c_cat2:
+        st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+        if st.button("➕ Adicionar à Lista"):
+            if nova_desp_nome and nova_desp_nome.strip():
+                nome_limpo = nova_desp_nome.strip()
+                if nome_limpo not in db["catalogo_despesas"]:
+                    db["catalogo_despesas"].append(nome_limpo)
+                    db["catalogo_despesas"] = sorted(db["catalogo_despesas"])
+                    salvar_dados(db)
+                    st.success(f"'{nome_limpo}' adicionada ao catálogo de despesas!")
+                    st.rerun()
+                else:
+                    st.warning("Essa despesa já existe na sua lista.")
+                    
+    st.markdown("---")
+    st.markdown("##### Despesas Cadastradas Atualmente:")
+    
+    col_d_list = st.columns(4)
+    for idx_cat, cat in enumerate(db["catalogo_despesas"]):
+        col_d_list[idx_cat % 4].markdown(f"""
+            <div style="background: #11162b; border: 1px solid #1c2442; padding: 6px 12px; border-radius: 10px; margin-bottom: 6px; font-size: 0.8rem; color: #cbd5e1;">
+                • {cat}
+            </div>
+        """, unsafe_allow_html=True)
