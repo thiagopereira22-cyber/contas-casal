@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilização CSS inspirada no design Neon Magenta / Midnight Dark
+# Estilização CSS refinada (com seletor :has(input:checked) para garantir que o botão fique 100% rosa)
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -32,7 +32,7 @@ st.markdown("""
 
         /* Botões de mês: estilo pílula vertical */
         div[data-testid="stRadio"] > div {
-            gap: 6px;
+            gap: 7px;
         }
         div[data-testid="stRadio"] label {
             background: #11162b !important;
@@ -50,17 +50,25 @@ st.markdown("""
             color: #ffffff !important;
             transform: translateX(3px);
         }
-        /* Mês selecionado com a cor rosa idêntica ao cartão Renda Total Consolidada */
-        div[data-testid="stRadio"] label[data-checked="true"] {
+
+        /* Mês selecionado com o rosa idêntico ao cartão principal */
+        div[data-testid="stRadio"] label:has(input:checked),
+        div[data-testid="stRadio"] label[data-checked="true"],
+        div[data-testid="stRadio"] [aria-checked="true"] {
             background: linear-gradient(135deg, #ff007a 0%, #ec4899 50%, #d946ef 100%) !important;
             border: 1px solid rgba(255, 255, 255, 0.4) !important;
             color: #ffffff !important;
             font-weight: 700 !important;
             box-shadow: 0 4px 18px rgba(255, 0, 122, 0.45) !important;
         }
-        div[data-testid="stRadio"] label[data-checked="true"] p {
+        div[data-testid="stRadio"] label:has(input:checked) p,
+        div[data-testid="stRadio"] label:has(input:checked) span {
             color: #ffffff !important;
             font-weight: 700 !important;
+        }
+        div[data-testid="stRadio"] label:has(input:checked) div[role="radio"] {
+            border-color: #ffffff !important;
+            background-color: #ffffff !important;
         }
 
         .top-bar {
@@ -105,7 +113,6 @@ st.markdown("""
             box-shadow: 0 0 12px rgba(255, 0, 122, 0.5);
         }
 
-        /* Card Neon Magenta Hero */
         .card-magenta-hero {
             background: linear-gradient(135deg, #ff007a 0%, #ec4899 50%, #d946ef 100%);
             border-radius: 24px;
@@ -219,7 +226,6 @@ RENDAS_PADRAO = [
     {"pessoa": "Luciana", "desc": "Diárias", "valor": 4781.50}
 ]
 
-# Catálogo padrão inicial de despesas para seleção rápida
 DESPESAS_CATALOGO_PADRAO = [
     "Aluguel Duetto", "Cond. Duetto", "Energia Duetto", "IPTU Duetto",
     "Cond. Aldepark", "Energia Aldepark", "Cartão C6", "Escola Felipe",
@@ -242,19 +248,20 @@ def carregar_dados():
             dados[m] = {
                 "rendas": [r.copy() for r in RENDAS_PADRAO],
                 "despesas": [],
-                "renda_extra_nome": "Aluguel Aldepark",
-                "renda_extra_valor": 3300.00,
-                "renda_extra_recebedor": "Thiago"
+                "rendas_extras": [
+                    {"nome": "Aluguel Aldepark", "valor": 3300.00, "recebedor": "Thiago"}
+                ]
             }
         else:
             if not dados[m].get("rendas"):
                 dados[m]["rendas"] = [r.copy() for r in RENDAS_PADRAO]
-            if "renda_extra_valor" not in dados[m]:
-                antigo_val = dados[m].get("aluguel_extra", 3300.00)
-                antigo_rec = dados[m].get("aluguel_recebedor", "Thiago")
-                dados[m]["renda_extra_nome"] = "Aluguel Aldepark"
-                dados[m]["renda_extra_valor"] = antigo_val
-                dados[m]["renda_extra_recebedor"] = antigo_rec
+            if "rendas_extras" not in dados[m]:
+                nome_antigo = dados[m].get("renda_extra_nome", "Aluguel Aldepark")
+                val_antigo = dados[m].get("renda_extra_valor", dados[m].get("aluguel_extra", 3300.00))
+                rec_antigo = dados[m].get("renda_extra_recebedor", dados[m].get("aluguel_recebedor", "Thiago"))
+                dados[m]["rendas_extras"] = [
+                    {"nome": nome_antigo, "valor": float(val_antigo), "recebedor": rec_antigo}
+                ]
                 
     return dados
 
@@ -283,40 +290,25 @@ with st.sidebar:
             <div style="display: inline-flex; width: 48px; height: 48px; border-radius: 50%; background: #11162b; border: 2px solid #ff007a; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(255, 0, 122, 0.5);">
                 <span style="color: #ff007a; font-weight: 800; font-size: 1.2rem;">⚡</span>
             </div>
-            <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 10px;">Orçamento</div>
+            <div style="font-size: 0.8rem; font-weight: 800; color: #94a3b8; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 10px;">Meses</div>
         </div>
     """, unsafe_allow_html=True)
     
     chaves_meses = [k for k in db.keys() if k != "catalogo_despesas"]
     todos_meses = sorted(chaves_meses, key=ordenar_meses)
     mes_atual = st.radio(
-        label="Orçamento Mensal",
+        label="Navegação Mensal",
         options=todos_meses,
         index=todos_meses.index("Setembro 2026") if "Setembro 2026" in todos_meses else 0,
         label_visibility="collapsed"
     )
-    
-    st.markdown("---")
-    if st.button("🔄 Replicar Rendas/Extra"):
-        rendas_atuais = db[mes_atual]["rendas"]
-        nome_extra = db[mes_atual].get("renda_extra_nome", "Aluguel Aldepark")
-        val_extra = db[mes_atual].get("renda_extra_valor", 3300.00)
-        rec_extra = db[mes_atual].get("renda_extra_recebedor", "Thiago")
-        for m in chaves_meses:
-            db[m]["rendas"] = [r.copy() for r in rendas_atuais]
-            db[m]["renda_extra_nome"] = nome_extra
-            db[m]["renda_extra_valor"] = val_extra
-            db[m]["renda_extra_recebedor"] = rec_extra
-        salvar_dados(db)
-        st.success("Replicado para todos os meses!")
-        st.rerun()
 
-# Cálculos Proporcionais e Renda Extra
+# Cálculos Proporcionais e Rendas Extras
 rendas = db[mes_atual]["rendas"]
 despesas = db[mes_atual]["despesas"]
-renda_extra_nome = db[mes_atual].get("renda_extra_nome", "Renda Extra")
-renda_extra_valor = float(db[mes_atual].get("renda_extra_valor", 3300.00))
-renda_extra_recebedor = db[mes_atual].get("renda_extra_recebedor", "Thiago")
+rendas_extras = db[mes_atual].get("rendas_extras", [])
+
+total_renda_extra = sum(float(rx["valor"]) for rx in rendas_extras)
 
 renda_thiago = sum(r["valor"] for r in rendas if r["pessoa"] == "Thiago")
 renda_luciana = sum(r["valor"] for r in rendas if r["pessoa"] == "Luciana")
@@ -332,16 +324,15 @@ bruto_thiago = sum(d["valor"] for d in despesas if d["pessoa"] == "Thiago")
 bruto_luciana = sum(d["valor"] for d in despesas if d["pessoa"] == "Luciana")
 despesas_brutas = bruto_thiago + bruto_luciana
 
-despesas_liquidas = max(0.0, despesas_brutas - renda_extra_valor)
+despesas_liquidas = max(0.0, despesas_brutas - total_renda_extra)
 deveria_thiago = despesas_liquidas * perc_thiago
 deveria_luciana = despesas_liquidas * perc_luciana
 
-if renda_extra_recebedor == "Thiago":
-    efetivo_thiago = bruto_thiago - renda_extra_valor
-    efetivo_luciana = bruto_luciana
-else:
-    efetivo_thiago = bruto_thiago
-    efetivo_luciana = bruto_luciana - renda_extra_valor
+extra_recebido_thiago = sum(float(rx["valor"]) for rx in rendas_extras if rx.get("recebedor") == "Thiago")
+extra_recebido_luciana = sum(float(rx["valor"]) for rx in rendas_extras if rx.get("recebedor") == "Luciana")
+
+efetivo_thiago = bruto_thiago - extra_recebido_thiago
+efetivo_luciana = bruto_luciana - extra_recebido_luciana
 
 diff_thiago = efetivo_thiago - deveria_thiago
 
@@ -386,7 +377,7 @@ with col_left:
                 <svg width="100%" height="28" viewBox="0 0 200 28" fill="none">
                     <path d="M0 18 Q 30 5, 60 14 T 120 18 T 180 8 T 200 16" stroke="#ff007a" stroke-width="3" fill="none"/>
                 </svg>
-                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Bruto: R$ {despesas_brutas:,.2f} | Renda Extra: -R$ {renda_extra_valor:,.2f}</div>
+                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Bruto: R$ {despesas_brutas:,.2f} | Rendas Extras: -R$ {total_renda_extra:,.2f}</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -396,12 +387,12 @@ with col_left:
     with c3:
         st.markdown(f"""
             <div class="card-dark">
-                <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: #64748b;">{renda_extra_nome} (Abatido)</span>
-                <h3 style="font-size: 1.5rem; font-weight: 800; margin: 8px 0; color: #38bdf8;">- R$ {renda_extra_valor:,.2f}</h3>
+                <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: #64748b;">Rendas Extras (Abatimento Total)</span>
+                <h3 style="font-size: 1.5rem; font-weight: 800; margin: 8px 0; color: #38bdf8;">- R$ {total_renda_extra:,.2f}</h3>
                 <svg width="100%" height="24" viewBox="0 0 200 24" fill="none">
                     <path d="M0 16 Q 40 4, 80 12 T 140 18 T 200 8" stroke="#38bdf8" stroke-width="2.5" fill="none"/>
                 </svg>
-                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Recebido por {renda_extra_recebedor} e descontado das contas.</div>
+                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">{len(rendas_extras)} item(ns) cadastrado(s) abatendo das despesas.</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -444,7 +435,6 @@ with col_right:
 
 st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
 
-# Catálogo de Despesas Disponíveis
 catalogo_despesas = db.get("catalogo_despesas", sorted(DESPESAS_CATALOGO_PADRAO))
 
 # Abas de Ação e Edição
@@ -583,24 +573,53 @@ with tab2:
             st.caption("Sem despesas cadastradas.")
 
 with tab3:
-    st.markdown("<h4 style='color: #ffffff;'>⚙️ Configurar Renda Extra Compartilhada</h4>", unsafe_allow_html=True)
-    st.write("Defina o nome e o valor da renda extra (ex: Aluguel, Bônus, Rendimentos) a ser abatida proporcionalmente das despesas do casal:")
+    st.markdown("<h4 style='color: #ffffff;'>⚙️ Rendas Extras Compartilhadas (Abatimento de Dívidas)</h4>", unsafe_allow_html=True)
+    st.write("Adicione ou edite rendas extras (como Aluguel Aldepark, bônus ou rendimentos) que abatem proporcionalmente do total de contas do casal:")
     
-    c_a1, c_a2, c_a3 = st.columns(3)
-    with c_a1:
-        novo_nome_extra = st.text_input("Identificação da Renda Extra", value=renda_extra_nome)
-    with c_a2:
-        novo_valor_extra = st.number_input("Valor Total da Renda Extra (R$)", min_value=0.0, value=renda_extra_valor, step=50.0, format="%.2f")
-    with c_a3:
-        novo_recebedor_extra = st.selectbox("Quem recebeu o valor?", ["Thiago", "Luciana"], index=0 if renda_extra_recebedor == "Thiago" else 1)
-        
-    if st.button("Atualizar Renda Extra do Mês"):
-        db[mes_atual]["renda_extra_nome"] = novo_nome_extra
-        db[mes_atual]["renda_extra_valor"] = novo_valor_extra
-        db[mes_atual]["renda_extra_recebedor"] = novo_recebedor_extra
-        salvar_dados(db)
-        st.success("Configuração de Renda Extra atualizada!")
-        st.rerun()
+    with st.form("form_add_renda_extra", clear_on_submit=True):
+        st.markdown("##### ➕ Adicionar Nova Renda Extra")
+        c_rx1, c_rx2, c_rx3 = st.columns(3)
+        with c_rx1:
+            novo_rx_nome = st.text_input("Identificação (ex: Aluguel Aldepark, Bônus, Rendimento)")
+        with c_rx2:
+            novo_rx_valor = st.number_input("Valor da Renda Extra (R$)", min_value=0.0, step=50.0, format="%.2f")
+        with c_rx3:
+            novo_rx_recebedor = st.selectbox("Quem recebeu o dinheiro?", ["Thiago", "Luciana"])
+            
+        if st.form_submit_button("Cadastrar Renda Extra"):
+            if novo_rx_nome and novo_rx_valor > 0:
+                if "rendas_extras" not in db[mes_atual]:
+                    db[mes_atual]["rendas_extras"] = []
+                db[mes_atual]["rendas_extras"].append({
+                    "nome": novo_rx_nome.strip(),
+                    "valor": novo_rx_valor,
+                    "recebedor": novo_rx_recebedor
+                })
+                salvar_dados(db)
+                st.success(f"Renda Extra '{novo_rx_nome}' adicionada com sucesso!")
+                st.rerun()
+            else:
+                st.error("Preencha o nome e informe um valor maior que zero.")
+
+    st.markdown("---")
+    st.markdown("##### 📋 Rendas Extras Ativas no Mês:")
+    if rendas_extras:
+        for idx_rx, rx in enumerate(rendas_extras):
+            c_r1, c_r2, c_r3, c_r4 = st.columns([4, 3, 3, 2])
+            with c_r1:
+                st.markdown(f"<div style='padding-top: 10px; font-weight: 700; color: #38bdf8;'>• {rx['nome']}</div>", unsafe_allow_html=True)
+            with c_r2:
+                st.markdown(f"<div style='padding-top: 10px; color: #ffffff;'>R$ {float(rx['valor']):,.2f}</div>", unsafe_allow_html=True)
+            with c_r3:
+                st.markdown(f"<div style='padding-top: 10px; color: #94a3b8;'>Recebido por: <b>{rx['recebedor']}</b></div>", unsafe_allow_html=True)
+            with c_r4:
+                if st.button("Excluir", key=f"del_rx_{idx_rx}"):
+                    db[mes_atual]["rendas_extras"].pop(idx_rx)
+                    salvar_dados(db)
+                    st.success("Renda Extra removida!")
+                    st.rerun()
+    else:
+        st.info("Nenhuma renda extra cadastrada para este mês.")
 
 with tab4:
     st.markdown("<h4 style='color: #ffffff;'>🏷️ Cadastrar e Gerenciar Despesas Padrão</h4>", unsafe_allow_html=True)
