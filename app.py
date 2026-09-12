@@ -251,18 +251,7 @@ def salvar_dados(dados):
 
 db = carregar_dados()
 
-# Barra Lateral (Menu vertical com visual idêntico ao da imagem)
-with st.sidebar:
-    st.markdown("""
-        <div style="text-align: center; padding: 10px 0 20px 0;">
-            <div style="display: inline-flex; width: 48px; height: 48px; border-radius: 50%; background: #11162b; border: 2px solid #ff007a; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(255, 0, 122, 0.5);">
-                <span style="color: #ff007a; font-weight: 800; font-size: 1.2rem;">⚡</span>
-            </div>
-            <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 10px;">Meses</div>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    # Mapeamento para ordenação cronológica correta
+# Mapeamento para ordenação cronológica correta
 mapa_meses = {
     "janeiro": 1, "fevereiro": 2, "março": 3, "marco": 3, "abril": 4,
     "maio": 5, "junho": 6, "julho": 7, "agosto": 8, "setembro": 9,
@@ -275,8 +264,24 @@ def ordenar_meses(item):
     ano = int(partes[1]) if len(partes) > 1 and partes[1].isdigit() else 2026
     return (ano, mapa_meses.get(mes_nome, 0))
 
-# Lista ordenada de Janeiro a Dezembro
-todos_meses = sorted(list(db.keys()), key=ordenar_meses)
+# Barra Lateral
+with st.sidebar:
+    st.markdown("""
+        <div style="text-align: center; padding: 10px 0 20px 0;">
+            <div style="display: inline-flex; width: 48px; height: 48px; border-radius: 50%; background: #11162b; border: 2px solid #ff007a; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(255, 0, 122, 0.5);">
+                <span style="color: #ff007a; font-weight: 800; font-size: 1.2rem;">⚡</span>
+            </div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 10px;">Orçamento</div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    todos_meses = sorted(list(db.keys()), key=ordenar_meses)
+    mes_atual = st.radio(
+        label="Orçamento Mensal",
+        options=todos_meses,
+        index=todos_meses.index("Setembro 2026") if "Setembro 2026" in todos_meses else 0,
+        label_visibility="collapsed"
+    )
     
     st.markdown("---")
     if st.button("🔄 Replicar Rendas/Aluguel"):
@@ -340,7 +345,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# Grid Superior idêntico à imagem de referência
+# Grid Superior
 col_left, col_right = st.columns([6.8, 3.2])
 
 with col_left:
@@ -388,7 +393,7 @@ with col_left:
         st.markdown(f"""
             <div class="card-dark">
                 <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: #64748b;">Cota Proporcional das Contas</span>
-                <h3 style="font-size: 1.3rem; font-weight: 800; margin: 8px 0; color: #10b981;">Thiago {perc_thiago*100:.1f}% | Luciana {perc_luciana*100:.1f}%</h3>
+                <h3 style="font-size: 1.3rem; font-weight: 800; margin: 8px 0; color: #10b981;">Thiago {perc_thiago*100:.1f}% | Lu {perc_luciana*100:.1f}%</h3>
                 <svg width="100%" height="24" viewBox="0 0 200 24" fill="none">
                     <path d="M0 14 Q 50 20, 100 8 T 160 16 T 200 6" stroke="#10b981" stroke-width="2.5" fill="none"/>
                 </svg>
@@ -424,7 +429,7 @@ with col_right:
 st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
 
 # Abas de Ação e Edição
-tab1, tab2, tab3 = st.tabs(["📊 Extrato & Edição Direta", "⚡ Adicionar & Gerenciar Lançamentos", "⚙️ Configurar Renda Extra"])
+tab1, tab2, tab3 = st.tabs(["📊 Extrato & Edição Direta", "⚡ Adicionar & Gerenciar Lançamentos", "⚙️ Configurar Aluguel"])
 
 with tab1:
     col_t1, col_t2 = st.columns(2)
@@ -548,8 +553,8 @@ with tab2:
             st.caption("Sem despesas cadastradas.")
 
 with tab3:
-    st.markdown("<h4 style='color: #ffffff;'>🏠 Configuração da Renda Extra </h4>", unsafe_allow_html=True)
-    st.write("Defina o valor da renda extra a ser abatida proporcionalmente das despesas totais:")
+    st.markdown("<h4 style='color: #ffffff;'>🏠 Configuração do Aluguel Extra (Aldepark)</h4>", unsafe_allow_html=True)
+    st.write("Defina o valor do aluguel a ser abatido proporcionalmente das despesas totais:")
     c_a1, c_a2 = st.columns(2)
     with c_a1:
         novo_aluguel = st.number_input("Valor do Aluguel (R$)", min_value=0.0, value=aluguel_extra, step=50.0, format="%.2f")
