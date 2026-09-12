@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilização CSS refinada (com seletor :has(input:checked) para garantir que o botão fique 100% rosa)
+# Estilização CSS refinada
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -113,15 +113,21 @@ st.markdown("""
             box-shadow: 0 0 12px rgba(255, 0, 122, 0.5);
         }
 
+        /* Cartões com alturas fixas para simetria milimétrica */
         .card-magenta-hero {
             background: linear-gradient(135deg, #ff007a 0%, #ec4899 50%, #d946ef 100%);
-            border-radius: 24px;
-            padding: 24px;
+            border-radius: 22px;
+            padding: 22px;
             color: white;
             box-shadow: 0 10px 30px rgba(255, 0, 122, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.2);
             position: relative;
             overflow: hidden;
+            height: 195px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
         }
 
         .card-dark {
@@ -131,6 +137,11 @@ st.markdown("""
             padding: 22px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
             transition: border-color 0.2s ease;
+            height: 195px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
         }
         .card-dark:hover {
             border-color: #2e3b68;
@@ -138,15 +149,17 @@ st.markdown("""
 
         .donut-card {
             background: linear-gradient(145deg, #ff007a 0%, #c026d3 100%);
-            border-radius: 28px;
-            padding: 28px;
+            border-radius: 22px;
+            padding: 22px;
             color: white;
             box-shadow: 0 12px 35px rgba(236, 72, 153, 0.35);
             text-align: center;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
+            height: 406px;
+            box-sizing: border-box;
         }
         .donut-ring {
             width: 140px;
@@ -157,7 +170,7 @@ st.markdown("""
             align-items: center;
             justify-content: center;
             position: relative;
-            margin: 12px auto;
+            margin: 4px auto;
         }
         .donut-ring::after {
             content: "";
@@ -336,7 +349,7 @@ efetivo_luciana = bruto_luciana - extra_recebido_luciana
 
 diff_thiago = efetivo_thiago - deveria_thiago
 
-# Top Bar com Data Atual e Perfil do Casal
+# Top Bar
 st.markdown(f"""
     <div class="top-bar">
         <div class="date-pill">
@@ -352,7 +365,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# Grid Superior
+# Grid Superior Simétrico e Alinhado
 col_left, col_right = st.columns([6.8, 3.2])
 
 with col_left:
@@ -360,9 +373,11 @@ with col_left:
     with c1:
         st.markdown(f"""
             <div class="card-magenta-hero">
-                <span style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9;">Renda Total Consolidada</span>
-                <h2 style="font-size: 2rem; font-weight: 800; margin: 8px 0 12px 0;">R$ {renda_total:,.2f}</h2>
-                <div style="display: flex; justify-content: space-between; font-size: 0.78rem; opacity: 0.95;">
+                <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9;">Renda Total Consolidada</span>
+                <div>
+                    <h2 style="font-size: 1.85rem; font-weight: 800; margin: 0; color: #ffffff; line-height: 1.2;">R$ {renda_total:,.2f}</h2>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.76rem; opacity: 0.95; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 8px;">
                     <span>Thiago: <b>R$ {renda_thiago:,.2f}</b></span>
                     <span>Luciana: <b>R$ {renda_luciana:,.2f}</b></span>
                 </div>
@@ -372,39 +387,51 @@ with col_left:
     with c2:
         st.markdown(f"""
             <div class="card-dark">
-                <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: #64748b;">Despesas Líquidas (Contas)</span>
-                <h2 style="font-size: 1.8rem; font-weight: 800; margin: 8px 0; color: #ffffff;">R$ {despesas_liquidas:,.2f}</h2>
-                <svg width="100%" height="28" viewBox="0 0 200 28" fill="none">
-                    <path d="M0 18 Q 30 5, 60 14 T 120 18 T 180 8 T 200 16" stroke="#ff007a" stroke-width="3" fill="none"/>
-                </svg>
-                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Bruto: R$ {despesas_brutas:,.2f} | Rendas Extras: -R$ {total_renda_extra:,.2f}</div>
+                <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b;">Despesas Líquidas (Contas)</span>
+                <div>
+                    <h2 style="font-size: 1.85rem; font-weight: 800; margin: 0; color: #ffffff; line-height: 1.2;">R$ {despesas_liquidas:,.2f}</h2>
+                    <svg width="100%" height="20" viewBox="0 0 200 20" fill="none" style="margin-top: 4px;">
+                        <path d="M0 14 Q 30 2, 60 10 T 120 14 T 180 6 T 200 12" stroke="#ff007a" stroke-width="3" fill="none"/>
+                    </svg>
+                </div>
+                <div style="font-size: 0.76rem; color: #94a3b8; border-top: 1px solid #1c2442; padding-top: 8px;">
+                    Bruto: R$ {despesas_brutas:,.2f} | Rendas Extras: -R$ {total_renda_extra:,.2f}
+                </div>
             </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
     c3, c4 = st.columns(2)
     with c3:
         st.markdown(f"""
             <div class="card-dark">
-                <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: #64748b;">Rendas Extras (Abatimento Total)</span>
-                <h3 style="font-size: 1.5rem; font-weight: 800; margin: 8px 0; color: #38bdf8;">- R$ {total_renda_extra:,.2f}</h3>
-                <svg width="100%" height="24" viewBox="0 0 200 24" fill="none">
-                    <path d="M0 16 Q 40 4, 80 12 T 140 18 T 200 8" stroke="#38bdf8" stroke-width="2.5" fill="none"/>
-                </svg>
-                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">{len(rendas_extras)} item(ns) cadastrado(s) abatendo das despesas.</div>
+                <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b;">Rendas Extras (Abatimento)</span>
+                <div>
+                    <h2 style="font-size: 1.85rem; font-weight: 800; margin: 0; color: #38bdf8; line-height: 1.2;">- R$ {total_renda_extra:,.2f}</h2>
+                    <svg width="100%" height="20" viewBox="0 0 200 20" fill="none" style="margin-top: 4px;">
+                        <path d="M0 12 Q 40 2, 80 8 T 140 14 T 200 6" stroke="#38bdf8" stroke-width="2.5" fill="none"/>
+                    </svg>
+                </div>
+                <div style="font-size: 0.76rem; color: #94a3b8; border-top: 1px solid #1c2442; padding-top: 8px;">
+                    {len(rendas_extras)} item(ns) cadastrado(s) abatendo das despesas.
+                </div>
             </div>
         """, unsafe_allow_html=True)
 
     with c4:
         st.markdown(f"""
             <div class="card-dark">
-                <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: #64748b;">Cota Proporcional das Contas</span>
-                <h3 style="font-size: 1.3rem; font-weight: 800; margin: 8px 0; color: #10b981;">Thiago {perc_thiago*100:.1f}% | Luciana {perc_luciana*100:.1f}%</h3>
-                <svg width="100%" height="24" viewBox="0 0 200 24" fill="none">
-                    <path d="M0 14 Q 50 20, 100 8 T 160 16 T 200 6" stroke="#10b981" stroke-width="2.5" fill="none"/>
-                </svg>
-                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Thiago: R$ {deveria_thiago:,.2f} | Luciana: R$ {deveria_luciana:,.2f}</div>
+                <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b;">Cota Proporcional das Contas</span>
+                <div>
+                    <h2 style="font-size: 1.55rem; font-weight: 800; margin: 0; color: #10b981; line-height: 1.2;">Thiago {perc_thiago*100:.1f}% | Luciana {perc_luciana*100:.1f}%</h2>
+                    <svg width="100%" height="20" viewBox="0 0 200 20" fill="none" style="margin-top: 4px;">
+                        <path d="M0 12 Q 50 16, 100 6 T 160 12 T 200 4" stroke="#10b981" stroke-width="2.5" fill="none"/>
+                    </svg>
+                </div>
+                <div style="font-size: 0.76rem; color: #94a3b8; border-top: 1px solid #1c2442; padding-top: 8px;">
+                    Thiago: R$ {deveria_thiago:,.2f} | Luciana: R$ {deveria_luciana:,.2f}
+                </div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -420,13 +447,15 @@ with col_right:
 
     st.markdown(f"""
         <div class="donut-card">
-            <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9;">Balanço do Acerto</span>
+            <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9;">Balanço do Acerto</span>
             <div class="donut-ring" style="--percent: {porcentagem_maior:.1f}%;">
                 <div class="donut-content">{porcentagem_maior:.1f}%</div>
             </div>
-            <div style="font-size: 0.8rem; font-weight: 600; opacity: 0.9; margin-top: -4px;">{acerto_nome}</div>
-            <h2 style="font-size: 1.8rem; font-weight: 900; margin: 4px 0 12px 0;">{acerto_val}</h2>
-            <div style="display: flex; justify-content: space-around; width: 100%; font-size: 0.75rem; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;">
+            <div>
+                <div style="font-size: 0.8rem; font-weight: 600; opacity: 0.9;">{acerto_nome}</div>
+                <h2 style="font-size: 1.85rem; font-weight: 900; margin: 4px 0 0 0; line-height: 1.2;">{acerto_val}</h2>
+            </div>
+            <div style="display: flex; justify-content: space-around; width: 100%; font-size: 0.75rem; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 8px;">
                 <div><span>Thiago Pagou</span><br><b>R$ {bruto_thiago:,.2f}</b></div>
                 <div><span>Luciana Pagou</span><br><b>R$ {bruto_luciana:,.2f}</b></div>
             </div>
