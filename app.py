@@ -262,13 +262,21 @@ with st.sidebar:
         </div>
     """, unsafe_allow_html=True)
     
-    todos_meses = list(db.keys())
-    mes_atual = st.radio(
-        label="Orçamento Mensal",
-        options=todos_meses,
-        index=todos_meses.index("Setembro 2026") if "Setembro 2026" in todos_meses else 0,
-        label_visibility="collapsed"
-    )
+    # Mapeamento para ordenação cronológica correta
+mapa_meses = {
+    "janeiro": 1, "fevereiro": 2, "março": 3, "marco": 3, "abril": 4,
+    "maio": 5, "junho": 6, "julho": 7, "agosto": 8, "setembro": 9,
+    "outubro": 10, "novembro": 11, "dezembro": 12
+}
+
+def ordenar_meses(item):
+    partes = item.strip().split()
+    mes_nome = partes[0].lower()
+    ano = int(partes[1]) if len(partes) > 1 and partes[1].isdigit() else 2026
+    return (ano, mapa_meses.get(mes_nome, 0))
+
+# Lista ordenada de Janeiro a Dezembro
+todos_meses = sorted(list(db.keys()), key=ordenar_meses)
     
     st.markdown("---")
     if st.button("🔄 Replicar Rendas/Aluguel"):
