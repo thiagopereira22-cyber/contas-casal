@@ -8,16 +8,17 @@ st.set_page_config(
     page_title="Finanças do Casal | Dashboard Pro",
     page_icon="⚡",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Estilização CSS refinada
+# Estilização CSS refinada e responsiva para Desktop e Mobile
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         
         * {
             font-family: 'Plus Jakarta Sans', sans-serif;
+            box-sizing: border-box;
         }
 
         .stApp {
@@ -51,7 +52,6 @@ st.markdown("""
             transform: translateX(3px);
         }
 
-        /* Mês selecionado com o rosa idêntico ao cartão principal */
         div[data-testid="stRadio"] label:has(input:checked),
         div[data-testid="stRadio"] label[data-checked="true"],
         div[data-testid="stRadio"] [aria-checked="true"] {
@@ -75,7 +75,7 @@ st.markdown("""
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 12px;
         }
@@ -113,7 +113,7 @@ st.markdown("""
             box-shadow: 0 0 12px rgba(255, 0, 122, 0.5);
         }
 
-        /* Cartões com alturas fixas para simetria milimétrica */
+        /* Estrutura Desktop Padrão */
         .card-magenta-hero {
             background: linear-gradient(135deg, #ff007a 0%, #ec4899 50%, #d946ef 100%);
             border-radius: 22px;
@@ -123,11 +123,10 @@ st.markdown("""
             border: 1px solid rgba(255, 255, 255, 0.2);
             position: relative;
             overflow: hidden;
-            height: 195px;
+            min-height: 195px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            box-sizing: border-box;
         }
 
         .card-dark {
@@ -137,11 +136,10 @@ st.markdown("""
             padding: 22px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
             transition: border-color 0.2s ease;
-            height: 195px;
+            min-height: 195px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            box-sizing: border-box;
         }
         .card-dark:hover {
             border-color: #2e3b68;
@@ -158,8 +156,7 @@ st.markdown("""
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
-            height: 406px;
-            box-sizing: border-box;
+            min-height: 406px;
         }
         .donut-ring {
             width: 140px;
@@ -170,7 +167,7 @@ st.markdown("""
             align-items: center;
             justify-content: center;
             position: relative;
-            margin: 4px auto;
+            margin: 6px auto;
         }
         .donut-ring::after {
             content: "";
@@ -193,14 +190,16 @@ st.markdown("""
             padding: 6px;
             border-radius: 16px;
             border: 1px solid #1a2238;
+            overflow-x: auto;
         }
         .stTabs [data-baseweb="tab"] {
             background: transparent !important;
             border-radius: 12px !important;
             color: #94a3b8 !important;
             font-weight: 600 !important;
-            padding: 10px 20px !important;
+            padding: 10px 16px !important;
             border: none !important;
+            white-space: nowrap;
         }
         .stTabs [aria-selected="true"] {
             background: linear-gradient(135deg, #ff007a 0%, #ec4899 100%) !important;
@@ -216,10 +215,37 @@ st.markdown("""
             font-weight: 700 !important;
             padding: 0.6rem 1.2rem !important;
             box-shadow: 0 4px 15px rgba(255, 0, 122, 0.3) !important;
-            transition: transform 0.15s ease;
+            width: 100%;
         }
-        .stButton>button:hover {
-            transform: scale(1.02);
+
+        /* AJUSTES RESPONSIVOS PARA MOBILE (TELAS < 768px) */
+        @media (max-width: 768px) {
+            .top-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .date-pill, .user-pill {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .card-magenta-hero, .card-dark {
+                min-height: auto !important;
+                height: auto !important;
+                margin-bottom: 12px;
+                padding: 18px !important;
+            }
+            .donut-card {
+                min-height: auto !important;
+                height: auto !important;
+                margin-top: 12px;
+                padding: 24px 18px !important;
+            }
+            .card-magenta-hero h2, .card-dark h2 {
+                font-size: 1.55rem !important;
+            }
+            .card-dark h3 {
+                font-size: 1.25rem !important;
+            }
         }
     </style>
 """, unsafe_allow_html=True)
@@ -365,7 +391,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# Grid Superior Simétrico e Alinhado
+# Grid Superior Simétrico e Responsivo
 col_left, col_right = st.columns([6.8, 3.2])
 
 with col_left:
@@ -375,7 +401,7 @@ with col_left:
             <div class="card-magenta-hero">
                 <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9;">Renda Total Consolidada</span>
                 <div>
-                    <h2 style="font-size: 1.85rem; font-weight: 800; margin: 0; color: #ffffff; line-height: 1.2;">R$ {renda_total:,.2f}</h2>
+                    <h2 style="font-size: 1.85rem; font-weight: 800; margin: 6px 0; color: #ffffff; line-height: 1.2;">R$ {renda_total:,.2f}</h2>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-size: 0.76rem; opacity: 0.95; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 8px;">
                     <span>Thiago: <b>R$ {renda_thiago:,.2f}</b></span>
@@ -389,13 +415,13 @@ with col_left:
             <div class="card-dark">
                 <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b;">Despesas Líquidas (Contas)</span>
                 <div>
-                    <h2 style="font-size: 1.85rem; font-weight: 800; margin: 0; color: #ffffff; line-height: 1.2;">R$ {despesas_liquidas:,.2f}</h2>
+                    <h2 style="font-size: 1.85rem; font-weight: 800; margin: 6px 0; color: #ffffff; line-height: 1.2;">R$ {despesas_liquidas:,.2f}</h2>
                     <svg width="100%" height="20" viewBox="0 0 200 20" fill="none" style="margin-top: 4px;">
                         <path d="M0 14 Q 30 2, 60 10 T 120 14 T 180 6 T 200 12" stroke="#ff007a" stroke-width="3" fill="none"/>
                     </svg>
                 </div>
                 <div style="font-size: 0.76rem; color: #94a3b8; border-top: 1px solid #1c2442; padding-top: 8px;">
-                    Bruto: R$ {despesas_brutas:,.2f} | Rendas Extras: -R$ {total_renda_extra:,.2f}
+                    Bruto: R$ {despesas_brutas:,.2f} | Extras: -R$ {total_renda_extra:,.2f}
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -408,13 +434,13 @@ with col_left:
             <div class="card-dark">
                 <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b;">Rendas Extras (Abatimento)</span>
                 <div>
-                    <h2 style="font-size: 1.85rem; font-weight: 800; margin: 0; color: #38bdf8; line-height: 1.2;">- R$ {total_renda_extra:,.2f}</h2>
+                    <h2 style="font-size: 1.85rem; font-weight: 800; margin: 6px 0; color: #38bdf8; line-height: 1.2;">- R$ {total_renda_extra:,.2f}</h2>
                     <svg width="100%" height="20" viewBox="0 0 200 20" fill="none" style="margin-top: 4px;">
                         <path d="M0 12 Q 40 2, 80 8 T 140 14 T 200 6" stroke="#38bdf8" stroke-width="2.5" fill="none"/>
                     </svg>
                 </div>
                 <div style="font-size: 0.76rem; color: #94a3b8; border-top: 1px solid #1c2442; padding-top: 8px;">
-                    {len(rendas_extras)} item(ns) cadastrado(s) abatendo das despesas.
+                    {len(rendas_extras)} item(ns) cadastrado(s) abatendo das contas.
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -424,7 +450,7 @@ with col_left:
             <div class="card-dark">
                 <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b;">Cota Proporcional das Contas</span>
                 <div>
-                    <h2 style="font-size: 1.55rem; font-weight: 800; margin: 0; color: #10b981; line-height: 1.2;">Thiago {perc_thiago*100:.1f}% | Luciana {perc_luciana*100:.1f}%</h2>
+                    <h2 style="font-size: 1.45rem; font-weight: 800; margin: 6px 0; color: #10b981; line-height: 1.2;">Thiago {perc_thiago*100:.1f}% | Luciana {perc_luciana*100:.1f}%</h2>
                     <svg width="100%" height="20" viewBox="0 0 200 20" fill="none" style="margin-top: 4px;">
                         <path d="M0 12 Q 50 16, 100 6 T 160 12 T 200 4" stroke="#10b981" stroke-width="2.5" fill="none"/>
                     </svg>
@@ -455,7 +481,7 @@ with col_right:
                 <div style="font-size: 0.8rem; font-weight: 600; opacity: 0.9;">{acerto_nome}</div>
                 <h2 style="font-size: 1.85rem; font-weight: 900; margin: 4px 0 0 0; line-height: 1.2;">{acerto_val}</h2>
             </div>
-            <div style="display: flex; justify-content: space-around; width: 100%; font-size: 0.75rem; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 8px;">
+            <div style="display: flex; justify-content: space-around; width: 100%; font-size: 0.75rem; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 8px; margin-top: 8px;">
                 <div><span>Thiago Pagou</span><br><b>R$ {bruto_thiago:,.2f}</b></div>
                 <div><span>Luciana Pagou</span><br><b>R$ {bruto_luciana:,.2f}</b></div>
             </div>
