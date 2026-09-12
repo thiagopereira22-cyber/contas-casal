@@ -258,7 +258,7 @@ with st.sidebar:
             <div style="display: inline-flex; width: 48px; height: 48px; border-radius: 50%; background: #11162b; border: 2px solid #ff007a; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(255, 0, 122, 0.5);">
                 <span style="color: #ff007a; font-weight: 800; font-size: 1.2rem;">⚡</span>
             </div>
-            <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 10px;">Orçamento</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 10px;">Meses</div>
         </div>
     """, unsafe_allow_html=True)
     
@@ -416,7 +416,7 @@ with col_right:
 st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
 
 # Abas de Ação e Edição
-tab1, tab2, tab3 = st.tabs(["📊 Extrato & Edição Direta", "⚡ Adicionar & Gerenciar Lançamentos", "⚙️ Configurar Aluguel"])
+tab1, tab2, tab3 = st.tabs(["📊 Extrato & Edição Direta", "⚡ Adicionar & Gerenciar Lançamentos", "⚙️ Configurar Renda Extra"])
 
 with tab1:
     col_t1, col_t2 = st.columns(2)
@@ -540,8 +540,8 @@ with tab2:
             st.caption("Sem despesas cadastradas.")
 
 with tab3:
-    st.markdown("<h4 style='color: #ffffff;'>🏠 Configuração do Aluguel Extra (Aldepark)</h4>", unsafe_allow_html=True)
-    st.write("Defina o valor do aluguel a ser abatido proporcionalmente das despesas totais:")
+    st.markdown("<h4 style='color: #ffffff;'>🏠 Configuração da Renda Extra </h4>", unsafe_allow_html=True)
+    st.write("Defina o valor da renda extra a ser abatida proporcionalmente das despesas totais:")
     c_a1, c_a2 = st.columns(2)
     with c_a1:
         novo_aluguel = st.number_input("Valor do Aluguel (R$)", min_value=0.0, value=aluguel_extra, step=50.0, format="%.2f")
