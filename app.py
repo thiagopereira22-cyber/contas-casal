@@ -64,6 +64,32 @@ st.markdown("""
             box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
         }
         
+        /* Lista vertical limpa e clicável para os meses */
+        div[data-testid="stRadio"] > div {
+            gap: 4px;
+        }
+        div[data-testid="stRadio"] label {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+        }
+        div[data-testid="stRadio"] label:hover {
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        div[data-testid="stRadio"] label[data-checked="true"] {
+            background-color: #eff6ff !important;
+            border-color: #3b82f6 !important;
+            font-weight: 600;
+            color: #1d4ed8 !important;
+        }
+
         .stTabs [data-baseweb="tab-list"] {
             gap: 12px;
         }
@@ -85,29 +111,45 @@ st.markdown("""
 
 DB_FILE = "dados_casal.json"
 
+# Meses padrão disponíveis para seleção imediata
+MESES_PADRAO = [
+    "Janeiro 2026", "Fevereiro 2026", "Março 2026", "Abril 2026",
+    "Maio 2026", "Junho 2026", "Julho 2026", "Agosto 2026",
+    "Setembro 2026", "Outubro 2026", "Novembro 2026", "Dezembro 2026"
+]
+
+RENDAS_PADRAO = [
+    {"pessoa": "Thiago", "desc": "Salário", "valor": 8773.17},
+    {"pessoa": "Thiago", "desc": "Diárias", "valor": 9563.00},
+    {"pessoa": "Luciana", "desc": "Salário", "valor": 16927.99},
+    {"pessoa": "Luciana", "desc": "Diárias", "valor": 4781.50}
+]
+
 def carregar_dados():
     if os.path.exists(DB_FILE):
         with open(DB_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            dados = json.load(f)
     else:
-        return {
-            "Setembro 2026": {
-                "rendas": [
-                    {"pessoa": "Thiago", "desc": "Salário", "valor": 8773.17},
-                    {"pessoa": "Thiago", "desc": "Diárias", "valor": 9563.00},
-                    {"pessoa": "Luciana", "desc": "Salário", "valor": 16927.99},
-                    {"pessoa": "Luciana", "desc": "Diárias", "valor": 4781.50}
-                ],
-                "despesas": [
-                    {"pessoa": "Thiago", "desc": "Cartão C6", "valor": 12650.80},
-                    {"pessoa": "Thiago", "desc": "Aluguel Duetto", "valor": 3000.00},
-                    {"pessoa": "Thiago", "desc": "Escola Felipe", "valor": 2500.00},
-                    {"pessoa": "Luciana", "desc": "Parque das Flores", "valor": 350.00}
-                ],
+        dados = {}
+
+    # Replica as rendas e o aluguel para todos os meses caso não existam
+    for m in MESES_PADRAO:
+        if m not in dados:
+            dados[m] = {
+                "rendas": [r.copy() for r in RENDAS_PADRAO],
+                "despesas": [],
                 "aluguel_extra": 3300.00,
                 "aluguel_recebedor": "Thiago"
             }
-        }
+        else:
+            if not dados[m].get("rendas"):
+                dados[m]["rendas"] = [r.copy() for r in RENDAS_PADRAO]
+            if "aluguel_extra" not in dados[m]:
+                dados[m]["aluguel_extra"] = 3300.00
+            if "aluguel_recebedor" not in dados[m]:
+                dados[m]["aluguel_recebedor"] = "Thiago"
+                
+    return dados
 
 def salvar_dados(dados):
     with open(DB_FILE, "w", encoding="utf-8") as f:
@@ -117,31 +159,49 @@ db = carregar_dados()
 
 with st.sidebar:
     st.markdown("### **Smart Finance**")
-    st.markdown("<p style='color: #64748b; font-size: 0.85rem;'>Gestão do casal com abatimento proporcional de aluguel.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #64748b; font-size: 0.85rem;'>Gestão integrada e proporcional do casal.</p>", unsafe_allow_html=True)
     st.markdown("---")
     
-    st.markdown("#### 🗓️ Gerenciamento")
-    novo_mes = st.text_input("Criar Novo Mês", placeholder="Ex: Outubro 2026")
-    if st.button("Adicionar Mês"):
-        if novo_mes and novo_mes not in db:
-            db[novo_mes] = {"rendas": [], "despesas": [], "aluguel_extra": 3300.00, "aluguel_recebedor": "Thiago"}
-            salvar_dados(db)
-            st.success(f"Mês {novo_mes} criado!")
-            st.rerun()
+    st.markdown("#### 📅 **Selecione o Mês**")
+    todos_meses = list(db.keys())
+    
+    # Navegação rápida com 1 clique
+    mes_atual = st.radio(
+        label="Navegação Mensal",
+        options=todos_meses,
+        index=todos_meses.index("Setembro 2026") if "Setembro 2026" in todos_meses else 0,
+        label_visibility="collapsed"
+    )
+    
+    st.markdown("---")
+    with st.expander("➕ Adicionar outro mês/ano"):
+        novo_mes = st.text_input("Nome do Mês", placeholder="Ex: Janeiro 2027")
+        if st.button("Criar e Replicar Base"):
+            if novo_mes and novo_mes not in db:
+                db[novo_mes] = {
+                    "rendas": [r.copy() for r in RENDAS_PADRAO],
+                    "despesas": [],
+                    "aluguel_extra": 3300.00,
+                    "aluguel_recebedor": "Thiago"
+                }
+                salvar_dados(db)
+                st.success(f"Mês {novo_mes} criado!")
+                st.rerun()
+
+    # Replicar valores atuais para toda a planilha
+    if st.button("🔄 Replicar Rendas/Aluguel p/ Todos"):
+        rendas_atuais = db[mes_atual]["rendas"]
+        aluguel_atual = db[mes_atual].get("aluguel_extra", 3300.00)
+        recebedor_atual = db[mes_atual].get("aluguel_recebedor", "Thiago")
+        
+        for m in db:
+            db[m]["rendas"] = [r.copy() for r in rendas_atuais]
+            db[m]["aluguel_extra"] = aluguel_atual
+            db[m]["aluguel_recebedor"] = recebedor_atual
             
-    meses = list(db.keys())
-    mes_atual = st.selectbox("Mês de Referência", options=meses if meses else ["Setembro 2026"])
-    
-    st.markdown("---")
-    st.markdown("<p style='font-size: 0.75rem; color: #94a3b8;'>Sincronizado na nuvem • Seguro</p>", unsafe_allow_html=True)
-
-if not mes_atual or mes_atual not in db:
-    db[mes_atual] = {"rendas": [], "despesas": [], "aluguel_extra": 3300.00, "aluguel_recebedor": "Thiago"}
-
-if "aluguel_extra" not in db[mes_atual]:
-    db[mes_atual]["aluguel_extra"] = 3300.00
-if "aluguel_recebedor" not in db[mes_atual]:
-    db[mes_atual]["aluguel_recebedor"] = "Thiago"
+        salvar_dados(db)
+        st.success(f"Configurações de {mes_atual} replicadas para todos os meses!")
+        st.rerun()
 
 st.markdown('<h1 class="main-header">Painel Financeiro</h1>', unsafe_allow_html=True)
 st.markdown(f'<p class="sub-header">Mês de referência: <b>{mes_atual}</b></p>', unsafe_allow_html=True)
